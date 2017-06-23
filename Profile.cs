@@ -15,7 +15,6 @@ namespace namecheap_dynamic_dns
         public UpdateIntervalEnum UpdateInterval;
         public string IpAddress;
         public bool AutoDetectIpAddress;
-        [NonSerialized]
         public DateTime LastSyncTime;
 
         public Profile()
