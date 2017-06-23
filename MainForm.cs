@@ -2,13 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 
@@ -106,8 +101,8 @@ namespace namecheap_dynamic_dns
                 {
                     var profileStream = new MemoryStream(Encoding.UTF8.GetBytes(profileString));
                     var profile = xmlSerializer.Deserialize(profileStream);
-                    addProfile(profile as Profile);
-                    performDynamicDnsUpdate(profile as Profile);
+                    AddProfile(profile as Profile);
+                    PerformDynamicDnsUpdate(profile as Profile);
                 }
             }
         }
@@ -128,18 +123,18 @@ namespace namecheap_dynamic_dns
             Settings.Default.Save();
         }
 
-        private void newButton_Click(object sender, EventArgs e)
+        private void NewButton_Click(object sender, EventArgs e)
         {
             ChangeMode(ModeEnum.NEW);
         }
 
-        private void deleteButton_Click(object sender, EventArgs e)
+        private void DeleteButton_Click(object sender, EventArgs e)
         {
             profiles.RemoveAt(profilesComboBox.SelectedIndex);
             ChangeMode(ModeEnum.NONE);
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
+        private void SaveButton_Click(object sender, EventArgs e)
         {
             Profile profile;
             if (mode == ModeEnum.NEW)
@@ -172,7 +167,7 @@ namespace namecheap_dynamic_dns
 
             if (mode == ModeEnum.NEW)
             {
-                addProfile(profile);
+                AddProfile(profile);
             }
             else if (mode == ModeEnum.EDIT)
             {
@@ -181,12 +176,12 @@ namespace namecheap_dynamic_dns
             ChangeMode(ModeEnum.NONE);
         }
 
-        private void cancelButton_Click(object sender, EventArgs e)
+        private void CancelButton_Click(object sender, EventArgs e)
         {
             ChangeMode(ModeEnum.NONE);
         }
 
-        private void profilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void ProfilesComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (profilesComboBox.SelectedIndex != -1)
             {
@@ -194,7 +189,7 @@ namespace namecheap_dynamic_dns
             }
         }
 
-        private void autoDetectCheckBox_CheckedChanged(object sender, EventArgs e)
+        private void AutoDetectCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             ipAddressTextBox.Enabled = !autoDetectCheckBox.Checked;
             if (autoDetectCheckBox.Checked)
@@ -203,18 +198,18 @@ namespace namecheap_dynamic_dns
             }
         }
 
-        private void timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object sender, EventArgs e)
         {
             foreach (var profile in profiles)
             {
-                if (profile.LastSyncTime > DateTime.Now - Profile.getTimeSpanForUpdateInterval(profile.UpdateInterval))
+                if (profile.LastSyncTime > DateTime.Now - Profile.GetTimeSpanForUpdateInterval(profile.UpdateInterval))
                 {
-                    performDynamicDnsUpdate(profile);
+                    PerformDynamicDnsUpdate(profile);
                 }
             }
         }
 
-        private void stopStartButton_Click(object sender, EventArgs e)
+        private void StopStartButton_Click(object sender, EventArgs e)
         {
             if (stopStartButton.Tag as String == "Stop")
             {
@@ -234,7 +229,7 @@ namespace namecheap_dynamic_dns
             }
         }
 
-        private void addProfile(Profile profile)
+        private void AddProfile(Profile profile)
         {
             var profileStatusItem = new ListViewItem(profile.Label);
             profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(profileStatusItem, ""));
@@ -245,7 +240,7 @@ namespace namecheap_dynamic_dns
             statusListView.Items.Add(profileStatusItem);
         }
 
-        private void performDynamicDnsUpdate(Profile profile)
+        private void PerformDynamicDnsUpdate(Profile profile)
         {
             var message = DynamicDns.PerformDynamicDnsUpdate(profile);
             profile.LastSyncTime = DateTime.Now;
@@ -259,21 +254,21 @@ namespace namecheap_dynamic_dns
             lastActionValueStatusLabel.Text = date;
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
         }
 
-        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new AboutBox().ShowDialog();
         }
 
-        private void updateAllButton_Click(object sender, EventArgs e)
+        private void UpdateAllButton_Click(object sender, EventArgs e)
         {
             foreach (var profile in profiles)
             {
-                performDynamicDnsUpdate(profile);
+                PerformDynamicDnsUpdate(profile);
             }
         }
 
@@ -285,7 +280,7 @@ namespace namecheap_dynamic_dns
             }
         }
 
-        private void notifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        private void NotifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             this.Show();
             WindowState = FormWindowState.Normal;

@@ -32,9 +32,11 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.tabControl = new System.Windows.Forms.TabControl();
             this.statusTabPage = new System.Windows.Forms.TabPage();
+            this.updateAllButton = new System.Windows.Forms.Button();
             this.statusListView = new System.Windows.Forms.ListView();
             this.profileHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.statusHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.dateHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.stopStartButton = new System.Windows.Forms.Button();
             this.profilesTabPage = new System.Windows.Forms.TabPage();
             this.saveButton = new System.Windows.Forms.Button();
@@ -61,14 +63,12 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lastActionStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.timer = new System.Windows.Forms.Timer(this.components);
-            this.dateHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.lastActionValueStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.updateAllButton = new System.Windows.Forms.Button();
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.timer = new System.Windows.Forms.Timer(this.components);
             this.tabControl.SuspendLayout();
             this.statusTabPage.SuspendLayout();
             this.profilesTabPage.SuspendLayout();
@@ -101,6 +101,16 @@
             this.statusTabPage.Text = "Status";
             this.statusTabPage.UseVisualStyleBackColor = true;
             // 
+            // updateAllButton
+            // 
+            this.updateAllButton.Location = new System.Drawing.Point(6, 175);
+            this.updateAllButton.Name = "updateAllButton";
+            this.updateAllButton.Size = new System.Drawing.Size(75, 23);
+            this.updateAllButton.TabIndex = 4;
+            this.updateAllButton.Text = "Update All";
+            this.updateAllButton.UseVisualStyleBackColor = true;
+            this.updateAllButton.Click += new System.EventHandler(this.UpdateAllButton_Click);
+            // 
             // statusListView
             // 
             this.statusListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -129,6 +139,11 @@
             this.statusHeader.Text = "Status";
             this.statusHeader.Width = 205;
             // 
+            // dateHeader
+            // 
+            this.dateHeader.Text = "Date";
+            this.dateHeader.Width = 119;
+            // 
             // stopStartButton
             // 
             this.stopStartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -139,7 +154,7 @@
             this.stopStartButton.Tag = "Stop";
             this.stopStartButton.Text = "Stop";
             this.stopStartButton.UseVisualStyleBackColor = true;
-            this.stopStartButton.Click += new System.EventHandler(this.stopStartButton_Click);
+            this.stopStartButton.Click += new System.EventHandler(this.StopStartButton_Click);
             // 
             // profilesTabPage
             // 
@@ -178,7 +193,7 @@
             this.saveButton.TabIndex = 10;
             this.saveButton.Text = "Save";
             this.saveButton.UseVisualStyleBackColor = true;
-            this.saveButton.Click += new System.EventHandler(this.saveButton_Click);
+            this.saveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
             // cancelButton
             // 
@@ -190,7 +205,7 @@
             this.cancelButton.TabIndex = 11;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
             // deleteButton
             // 
@@ -202,7 +217,7 @@
             this.deleteButton.TabIndex = 9;
             this.deleteButton.Text = "Delete";
             this.deleteButton.UseVisualStyleBackColor = true;
-            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
+            this.deleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
             // 
             // autoDetectCheckBox
             // 
@@ -214,7 +229,7 @@
             this.autoDetectCheckBox.TabIndex = 8;
             this.autoDetectCheckBox.Text = "Auto-detect public IP address";
             this.autoDetectCheckBox.UseVisualStyleBackColor = true;
-            this.autoDetectCheckBox.CheckedChanged += new System.EventHandler(this.autoDetectCheckBox_CheckedChanged);
+            this.autoDetectCheckBox.CheckedChanged += new System.EventHandler(this.AutoDetectCheckBox_CheckedChanged);
             // 
             // ipAddressLabel
             // 
@@ -318,7 +333,7 @@
             this.profilesComboBox.Name = "profilesComboBox";
             this.profilesComboBox.Size = new System.Drawing.Size(383, 21);
             this.profilesComboBox.TabIndex = 1;
-            this.profilesComboBox.SelectedIndexChanged += new System.EventHandler(this.profilesComboBox_SelectedIndexChanged);
+            this.profilesComboBox.SelectedIndexChanged += new System.EventHandler(this.ProfilesComboBox_SelectedIndexChanged);
             // 
             // profilesLabel
             // 
@@ -337,7 +352,7 @@
             this.newButton.TabIndex = 2;
             this.newButton.Text = "New";
             this.newButton.UseVisualStyleBackColor = true;
-            this.newButton.Click += new System.EventHandler(this.newButton_Click);
+            this.newButton.Click += new System.EventHandler(this.NewButton_Click);
             // 
             // menuStrip
             // 
@@ -361,9 +376,9 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -376,9 +391,9 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutToolStripMenuItem.Text = "About...";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.AboutToolStripMenuItem_Click);
             // 
             // statusStrip
             // 
@@ -398,40 +413,19 @@
             this.lastActionStatusLabel.Size = new System.Drawing.Size(67, 17);
             this.lastActionStatusLabel.Text = "Last action:";
             // 
-            // notifyIcon
-            // 
-            this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
-            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
-            this.notifyIcon.Text = "namecheap-dynamic-dns";
-            this.notifyIcon.Visible = true;
-            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseDoubleClick);
-            // 
-            // timer
-            // 
-            this.timer.Enabled = true;
-            this.timer.Interval = 900000;
-            this.timer.Tick += new System.EventHandler(this.timer_Tick);
-            // 
-            // dateHeader
-            // 
-            this.dateHeader.Text = "Date";
-            this.dateHeader.Width = 119;
-            // 
             // lastActionValueStatusLabel
             // 
             this.lastActionValueStatusLabel.Name = "lastActionValueStatusLabel";
             this.lastActionValueStatusLabel.Size = new System.Drawing.Size(34, 17);
             this.lastActionValueStatusLabel.Text = "none";
             // 
-            // updateAllButton
+            // notifyIcon
             // 
-            this.updateAllButton.Location = new System.Drawing.Point(6, 175);
-            this.updateAllButton.Name = "updateAllButton";
-            this.updateAllButton.Size = new System.Drawing.Size(75, 23);
-            this.updateAllButton.TabIndex = 4;
-            this.updateAllButton.Text = "Update All";
-            this.updateAllButton.UseVisualStyleBackColor = true;
-            this.updateAllButton.Click += new System.EventHandler(this.updateAllButton_Click);
+            this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
+            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+            this.notifyIcon.Text = "namecheap-dynamic-dns";
+            this.notifyIcon.Visible = true;
+            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NotifyIcon_MouseDoubleClick);
             // 
             // contextMenuStrip
             // 
@@ -446,14 +440,20 @@
             this.updateAllToolStripMenuItem.Name = "updateAllToolStripMenuItem";
             this.updateAllToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.updateAllToolStripMenuItem.Text = "Update All";
-            this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.updateAllButton_Click);
+            this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.UpdateAllButton_Click);
             // 
             // exitToolStripMenuItem1
             // 
             this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
             this.exitToolStripMenuItem1.Size = new System.Drawing.Size(129, 22);
             this.exitToolStripMenuItem1.Text = "Exit";
-            this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            this.exitToolStripMenuItem1.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
+            // 
+            // timer
+            // 
+            this.timer.Enabled = true;
+            this.timer.Interval = 900000;
+            this.timer.Tick += new System.EventHandler(this.Timer_Tick);
             // 
             // MainForm
             // 

@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace namecheap_dynamic_dns
 {
@@ -30,7 +25,7 @@ namespace namecheap_dynamic_dns
             }
         }
 
-        public static TimeSpan getTimeSpanForUpdateInterval(UpdateIntervalEnum updateInterval)
+        public static TimeSpan GetTimeSpanForUpdateInterval(UpdateIntervalEnum updateInterval)
         {
             switch (updateInterval)
             {
