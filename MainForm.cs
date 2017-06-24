@@ -39,6 +39,11 @@ namespace Kourlas.NamecheapDynamicDns
         private List<Profile> profiles;
 
         /// <summary>
+        /// The update interval timers for each of the profiles.
+        /// </summary>
+        private List<Timer> timers;
+
+        /// <summary>
         /// The current mode that the Profiles tab is in.
         /// </summary>
         private ModeEnum mode;
@@ -127,7 +132,8 @@ namespace Kourlas.NamecheapDynamicDns
                     dynamicDnsPasswordTextBox.Enabled = true;
                     dynamicDnsPasswordTextBox.Text = string.Empty;
                     updateIntervalComboBox.Enabled = true;
-                    updateIntervalComboBox.SelectedIndex = 0;
+                    updateIntervalComboBox.SelectedIndex = 
+                        updateIntervalComboBox.Items.Count - 1;
                     autoDetectCheckBox.Enabled = true;
                     autoDetectCheckBox.Checked = false;
                     ipAddressTextBox.Enabled = true;
@@ -258,10 +264,9 @@ namespace Kourlas.NamecheapDynamicDns
         /// <param name="e">The event arguments.</param>
         private void StopStartButton_Click(object sender, EventArgs e)
         {
-            if ((string)stopStartButton.Tag == "Stop")
+            if ((string)stopStartButton.Tag == "Stop All")
             {
                 timer.Stop();
-                stopStartButton.Text = "Start";
                 stopStartButton.Tag = "Start";
             }
             else if ((string)stopStartButton.Tag == "Start")

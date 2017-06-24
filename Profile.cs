@@ -27,6 +27,16 @@ namespace Kourlas.NamecheapDynamicDns
     public enum UpdateIntervalEnum
     {
         /// <summary>
+        /// 1 minute.
+        /// </summary>
+        ONE_MINUTE,
+
+        /// <summary>
+        /// 5 minutes.
+        /// </summary>
+        FIVE_MINUTES,
+
+        /// <summary>
         /// 15 minutes.
         /// </summary>
         FIFTEEN_MINUTES,
@@ -50,6 +60,11 @@ namespace Kourlas.NamecheapDynamicDns
         /// 6 hours.
         /// </summary>
         SIX_HOURS,
+
+        /// <summary>
+        /// 12 hours.
+        /// </summary>
+        TWELVE_HOURS,
 
         /// <summary>
         /// 24 hours.
@@ -160,6 +175,10 @@ namespace Kourlas.NamecheapDynamicDns
         {
             switch (updateInterval)
             {
+                case UpdateIntervalEnum.ONE_MINUTE:
+                    return new TimeSpan(0, 1, 0);
+                case UpdateIntervalEnum.FIVE_MINUTES:
+                    return new TimeSpan(0, 5, 0);
                 case UpdateIntervalEnum.FIFTEEN_MINUTES:
                     return new TimeSpan(0, 15, 0);
                 case UpdateIntervalEnum.THIRTY_MINUTES:
@@ -170,10 +189,12 @@ namespace Kourlas.NamecheapDynamicDns
                     return new TimeSpan(3, 0, 0);
                 case UpdateIntervalEnum.SIX_HOURS:
                     return new TimeSpan(6, 0, 0);
+                case UpdateIntervalEnum.TWELVE_HOURS:
+                    return new TimeSpan(12, 0, 0);
                 case UpdateIntervalEnum.TWENTY_FOUR_HOURS:
                     return new TimeSpan(24, 0, 0);
                 default:
-                    throw new Exception();
+                    throw new Exception("Unrecognized update interval");
             }
         }
     }

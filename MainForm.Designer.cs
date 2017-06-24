@@ -151,8 +151,8 @@
             this.stopStartButton.Name = "stopStartButton";
             this.stopStartButton.Size = new System.Drawing.Size(75, 23);
             this.stopStartButton.TabIndex = 3;
-            this.stopStartButton.Tag = "Stop";
-            this.stopStartButton.Text = "Stop";
+            this.stopStartButton.Tag = "";
+            this.stopStartButton.Text = "Stop All";
             this.stopStartButton.UseVisualStyleBackColor = true;
             this.stopStartButton.Click += new System.EventHandler(this.StopStartButton_Click);
             // 
@@ -263,11 +263,14 @@
             this.updateIntervalComboBox.Enabled = false;
             this.updateIntervalComboBox.FormattingEnabled = true;
             this.updateIntervalComboBox.Items.AddRange(new object[] {
+            "1 minute",
+            "5 minutes",
             "15 minutes",
             "30 minutes",
             "1 hour",
             "3 hours",
             "6 hours",
+            "12 hours",
             "24 hours"});
             this.updateIntervalComboBox.Location = new System.Drawing.Point(356, 98);
             this.updateIntervalComboBox.Name = "updateIntervalComboBox";
@@ -452,7 +455,7 @@
             // timer
             // 
             this.timer.Enabled = true;
-            this.timer.Interval = 900000;
+            this.timer.Interval = 60000;
             this.timer.Tick += new System.EventHandler(this.Timer_Tick);
             // 
             // MainForm
