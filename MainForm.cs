@@ -233,6 +233,9 @@ namespace Kourlas.NamecheapDynamicDns
             profileStatusItem.SubItems[2].Text = date;
 
             lastActionValueStatusLabel.Text = date;
+
+            timer.Stop();
+            timer.Start();
         }
 
         /// <summary>
@@ -257,13 +260,13 @@ namespace Kourlas.NamecheapDynamicDns
         {
             if ((string)stopStartButton.Tag == "Stop")
             {
-                timer.Enabled = false;
+                timer.Stop();
                 stopStartButton.Text = "Start";
                 stopStartButton.Tag = "Start";
             }
             else if ((string)stopStartButton.Tag == "Start")
             {
-                timer.Enabled = true;
+                timer.Start();
                 stopStartButton.Text = "Stop";
                 stopStartButton.Tag = "Stop";
             }
@@ -431,9 +434,9 @@ namespace Kourlas.NamecheapDynamicDns
         {
             foreach (var profile in this.profiles)
             {
-                if (profile.LastSyncTime > DateTime.Now - 
+                if (profile.LastSyncTime +
                     Profile.GetTimeSpanForUpdateInterval(
-                        profile.UpdateInterval))
+                        profile.UpdateInterval) <= DateTime.Now)
                 {
                     this.PerformDynamicDnsUpdate(profile);
                 }

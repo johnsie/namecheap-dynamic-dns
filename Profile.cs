@@ -161,17 +161,17 @@ namespace Kourlas.NamecheapDynamicDns
             switch (updateInterval)
             {
                 case UpdateIntervalEnum.FIFTEEN_MINUTES:
-                    return new TimeSpan(9000000000);
+                    return new TimeSpan(0, 15, 0);
                 case UpdateIntervalEnum.THIRTY_MINUTES:
-                    return new TimeSpan(18000000000);
+                    return new TimeSpan(0, 30, 0);
                 case UpdateIntervalEnum.ONE_HOUR:
-                    return new TimeSpan(36000000000);
+                    return new TimeSpan(1, 0, 0);
                 case UpdateIntervalEnum.THREE_HOURS:
-                    return new TimeSpan(108000000000);
+                    return new TimeSpan(3, 0, 0);
                 case UpdateIntervalEnum.SIX_HOURS:
-                    return new TimeSpan(216000000000);
+                    return new TimeSpan(6, 0, 0);
                 case UpdateIntervalEnum.TWENTY_FOUR_HOURS:
-                    return new TimeSpan(864000000000);
+                    return new TimeSpan(24, 0, 0);
                 default:
                     throw new Exception();
             }
