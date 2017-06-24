@@ -63,7 +63,6 @@ namespace Kourlas.NamecheapDynamicDns
                     var profile = (Profile)xmlSerializer.Deserialize(
                         profileStream);
                     this.AddProfile(profile);
-                    this.PerformDynamicDnsUpdate(profile);
                 }
             }
         }
@@ -190,6 +189,8 @@ namespace Kourlas.NamecheapDynamicDns
             this.profiles.Add(profile);
             this.profilesComboBox.Items.Add(profile.Label);
             this.statusListView.Items.Add(profileStatusItem);
+
+            this.PerformDynamicDnsUpdate(profile);
         }
 
         /// <summary>
