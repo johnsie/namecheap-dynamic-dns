@@ -109,10 +109,10 @@ namespace Kourlas.NamecheapDynamicDns
                     dynamicDnsPasswordTextBox.Text = string.Empty;
                     updateIntervalComboBox.Enabled = false;
                     updateIntervalComboBox.SelectedIndex = -1;
-                    ipAddressTextBox.Enabled = false;
-                    ipAddressTextBox.Text = string.Empty;
                     autoDetectCheckBox.Enabled = false;
                     autoDetectCheckBox.Checked = false;
+                    ipAddressTextBox.Enabled = false;
+                    ipAddressTextBox.Text = string.Empty;
 
                     deleteButton.Enabled = false;
                     saveButton.Enabled = false;
@@ -128,10 +128,10 @@ namespace Kourlas.NamecheapDynamicDns
                     dynamicDnsPasswordTextBox.Text = string.Empty;
                     updateIntervalComboBox.Enabled = true;
                     updateIntervalComboBox.SelectedIndex = 0;
-                    ipAddressTextBox.Enabled = true;
-                    ipAddressTextBox.Text = string.Empty;
                     autoDetectCheckBox.Enabled = true;
                     autoDetectCheckBox.Checked = false;
+                    ipAddressTextBox.Enabled = true;
+                    ipAddressTextBox.Text = string.Empty;
 
                     deleteButton.Enabled = true;
                     saveButton.Enabled = true;
@@ -152,15 +152,16 @@ namespace Kourlas.NamecheapDynamicDns
                     updateIntervalComboBox.SelectedIndex =
                         (int)this.profiles[profilesComboBox.SelectedIndex]
                         .UpdateInterval;
-                    ipAddressTextBox.Enabled = 
-                        !this.profiles[profilesComboBox.SelectedIndex]
-                        .AutoDetectIpAddress;
-                    ipAddressTextBox.Text =
-                        this.profiles[profilesComboBox.SelectedIndex].IpAddress;
                     autoDetectCheckBox.Enabled = true;
                     autoDetectCheckBox.Checked =
                         this.profiles[profilesComboBox.SelectedIndex]
                         .AutoDetectIpAddress;
+                    ipAddressTextBox.Enabled = 
+                        !this.profiles[profilesComboBox.SelectedIndex]
+                        .AutoDetectIpAddress;
+                    ipAddressTextBox.Text =
+                        this.profiles[profilesComboBox.SelectedIndex]
+                        .IpAddress;
 
                     if (autoDetectCheckBox.Checked)
                     {
