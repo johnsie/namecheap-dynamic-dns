@@ -1,4 +1,4 @@
-﻿namespace namecheap_dynamic_dns
+﻿namespace Kourlas.NamecheapDynamicDns
 {
     partial class AboutBox
     {

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace namecheap_dynamic_dns.Properties {
+namespace Kourlas.NamecheapDynamicDns.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
