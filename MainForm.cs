@@ -195,6 +195,27 @@ namespace Kourlas.NamecheapDynamicDns
         }
 
         /// <summary>
+        /// Edits the specified profile at the specified index in the profiles
+        /// list.
+        /// </summary>
+        /// <param name="profile">The specified profile.</param>
+        /// <param name="index">The specified index.</param>
+        private void EditProfile(Profile profile, int index)
+        {
+            var profileStatusItem = new ListViewItem(profile.Label);
+            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
+                profileStatusItem, string.Empty));
+            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
+                profileStatusItem, string.Empty));
+
+            this.profiles[index] = profile;
+            this.profilesComboBox.Items[index] = profile.Label;
+            this.statusListView.Items[index] = profileStatusItem;
+
+            this.PerformDynamicDnsUpdate(profile);
+        }
+
+        /// <summary>
         /// Performs a dynamic DNS update with the specified profile.
         /// </summary>
         /// <param name="profile">The specified profile.</param>
@@ -320,7 +341,7 @@ namespace Kourlas.NamecheapDynamicDns
             }
             else if (this.mode == ModeEnum.EDIT)
             {
-                this.profiles[profilesComboBox.SelectedIndex] = profile;
+                this.EditProfile(profile, profilesComboBox.SelectedIndex);
             }
 
             this.ChangeMode(ModeEnum.NONE);
