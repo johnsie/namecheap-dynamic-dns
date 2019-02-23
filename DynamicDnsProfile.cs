@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="Profile.cs" company="Michael Kourlas">
+// <copyright file="DynamicDnsProfile.cs" company="Michael Kourlas">
 //   namecheap-dynamic-dns
 //   Copyright (C) 2017 Michael Kourlas
 //
@@ -20,69 +20,81 @@
 namespace Kourlas.NamecheapDynamicDns
 {
     using System;
+    using System.Net;
 
     /// <summary>
     /// Represents a period of time between dynamic DNS updates.
     /// </summary>
-    public enum UpdateIntervalEnum
+    public enum UpdateInterval
     {
         /// <summary>
         /// 1 minute.
         /// </summary>
-        ONE_MINUTE,
+        OneMinute,
 
         /// <summary>
         /// 5 minutes.
         /// </summary>
-        FIVE_MINUTES,
+        FiveMinutes,
 
         /// <summary>
         /// 15 minutes.
         /// </summary>
-        FIFTEEN_MINUTES,
+        FifteenMinutes,
 
         /// <summary>
         /// 30 minutes.
         /// </summary>
-        THIRTY_MINUTES,
+        ThirtyMinutes,
 
         /// <summary>
         /// 1 hour.
         /// </summary>
-        ONE_HOUR,
+        OneHour,
 
         /// <summary>
         /// 3 hours.
         /// </summary>
-        THREE_HOURS,
+        ThreeHours,
 
         /// <summary>
         /// 6 hours.
         /// </summary>
-        SIX_HOURS,
+        SixHours,
 
         /// <summary>
         /// 12 hours.
         /// </summary>
-        TWELVE_HOURS,
+        TwelveHours,
 
         /// <summary>
         /// 24 hours.
         /// </summary>
-        TWENTY_FOUR_HOURS,
+        TwentyFourHours,
     }
 
     /// <summary>
     /// Represents a Namecheap dynamic DNS update profile.
     /// </summary>
-    public class Profile
+    [Serializable]
+    public class DynamicDnsProfile
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Profile"/> class.
+        /// Initializes a new instance of the <see cref="DynamicDnsProfile"/> 
+        /// class.
         /// </summary>
-        public Profile()
+        public DynamicDnsProfile()
         {
-            this.LastSyncTime = DateTime.MinValue;
+            this.Id = Guid.NewGuid();
+        }
+
+        /// <summary>
+        /// Gets or sets the ID of this profile.
+        /// </summary>
+        public Guid Id
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -116,7 +128,7 @@ namespace Kourlas.NamecheapDynamicDns
         /// Gets or sets the frequency at which updates occur with this 
         /// profile.
         /// </summary>
-        public UpdateIntervalEnum UpdateInterval
+        public UpdateInterval Interval
         {
             get;
             set;
@@ -124,9 +136,9 @@ namespace Kourlas.NamecheapDynamicDns
 
         /// <summary>
         /// Gets or sets the IP address to use for updates. This is not used
-        /// if <see cref="AutoDetectIpAddress"/> is true.
+        /// if <see cref="AutoDetectIPAddress"/> is true.
         /// </summary>
-        public string IpAddress
+        public string UpdateIPAddress
         {
             get;
             set;
@@ -136,16 +148,7 @@ namespace Kourlas.NamecheapDynamicDns
         /// Gets or sets a value indicating whether the current public IP 
         /// address should be used for updates.
         /// </summary>
-        public bool AutoDetectIpAddress
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the last time an update occurred using this profile.
-        /// </summary>
-        public DateTime LastSyncTime
+        public bool AutoDetectIPAddress
         {
             get;
             set;
@@ -164,37 +167,37 @@ namespace Kourlas.NamecheapDynamicDns
         }
 
         /// <summary>
-        /// Gets a <see cref="TimeSpan"/> object representing the specified
-        /// update interval.
+        /// Returns the frequency at which updates occur with this profile
+        /// in milliseconds.
         /// </summary>
-        /// <param name="updateInterval">The specified update interval.</param>
-        /// <returns>A <see cref="TimeSpan"/> object representing the specified
-        /// update interval.</returns>
-        public static TimeSpan GetTimeSpanForUpdateInterval(
-            UpdateIntervalEnum updateInterval)
+        /// <returns>
+        /// The frequency at which updates occur with this profile
+        /// in milliseconds.
+        /// </returns>
+        public int GetUpdateIntervalInMilliseconds()
         {
-            switch (updateInterval)
+            switch (this.Interval)
             {
-                case UpdateIntervalEnum.ONE_MINUTE:
-                    return new TimeSpan(0, 1, 0);
-                case UpdateIntervalEnum.FIVE_MINUTES:
-                    return new TimeSpan(0, 5, 0);
-                case UpdateIntervalEnum.FIFTEEN_MINUTES:
-                    return new TimeSpan(0, 15, 0);
-                case UpdateIntervalEnum.THIRTY_MINUTES:
-                    return new TimeSpan(0, 30, 0);
-                case UpdateIntervalEnum.ONE_HOUR:
-                    return new TimeSpan(1, 0, 0);
-                case UpdateIntervalEnum.THREE_HOURS:
-                    return new TimeSpan(3, 0, 0);
-                case UpdateIntervalEnum.SIX_HOURS:
-                    return new TimeSpan(6, 0, 0);
-                case UpdateIntervalEnum.TWELVE_HOURS:
-                    return new TimeSpan(12, 0, 0);
-                case UpdateIntervalEnum.TWENTY_FOUR_HOURS:
-                    return new TimeSpan(24, 0, 0);
+                case UpdateInterval.OneMinute:
+                    return (int)new TimeSpan(0, 1, 0).TotalMilliseconds;
+                case UpdateInterval.FiveMinutes:
+                    return (int)new TimeSpan(0, 5, 0).TotalMilliseconds;
+                case UpdateInterval.FifteenMinutes:
+                    return (int)new TimeSpan(0, 15, 0).TotalMilliseconds;
+                case UpdateInterval.ThirtyMinutes:
+                    return (int)new TimeSpan(0, 30, 0).TotalMilliseconds;
+                case UpdateInterval.OneHour:
+                    return (int)new TimeSpan(1, 0, 0).TotalMilliseconds;
+                case UpdateInterval.ThreeHours:
+                    return (int)new TimeSpan(3, 0, 0).TotalMilliseconds;
+                case UpdateInterval.SixHours:
+                    return (int)new TimeSpan(6, 0, 0).TotalMilliseconds;
+                case UpdateInterval.TwelveHours:
+                    return (int)new TimeSpan(12, 0, 0).TotalMilliseconds;
+                case UpdateInterval.TwentyFourHours:
+                    return (int)new TimeSpan(24, 0, 0).TotalMilliseconds;
                 default:
-                    throw new Exception("Unrecognized update interval");
+                    throw new DynamicDnsException("Unrecognized update interval");
             }
         }
     }

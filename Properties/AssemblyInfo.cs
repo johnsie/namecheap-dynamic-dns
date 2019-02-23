@@ -36,7 +36,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Kourlas")]
 [assembly: AssemblyProduct("namecheap-dynamic-dns")]
-[assembly: AssemblyCopyright("Copyright (C) 2017 Michael Kourlas")]
+[assembly: AssemblyCopyright("Copyright (C) 2017-2019 Michael Kourlas")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

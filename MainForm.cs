@@ -20,10 +20,13 @@
 namespace Kourlas.NamecheapDynamicDns
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.Specialized;
     using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Reflection;
     using System.Text;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
     using System.Xml.Serialization;
     using Kourlas.NamecheapDynamicDns.Properties;
@@ -34,19 +37,15 @@ namespace Kourlas.NamecheapDynamicDns
     public partial class MainForm : Form
     {
         /// <summary>
-        /// The dynamic DNS profiles used by the application.
+        /// Handles the performance and scheduling of dynamic DNS updates and 
+        /// informs the UI when they are complete using an event handler.
         /// </summary>
-        private List<Profile> profiles;
-
-        /// <summary>
-        /// The update interval timers for each of the profiles.
-        /// </summary>
-        private List<Timer> timers;
+        private DynamicDns dynamicDns;
 
         /// <summary>
         /// The current mode that the Profiles tab is in.
         /// </summary>
-        private ModeEnum mode;
+        private ProfilesMode mode;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainForm"/> class.
@@ -55,27 +54,25 @@ namespace Kourlas.NamecheapDynamicDns
         {
             this.InitializeComponent();
 
-            this.profiles = new List<Profile>();
-            this.ChangeMode(ModeEnum.NONE);
+            this.ChangeMode(ProfilesMode.NONE);
 
-            if (Settings.Default.Profiles != null)
-            {
-                var xmlSerializer = new XmlSerializer(typeof(Profile));
-                foreach (string profileString in Settings.Default.Profiles)
-                {
-                    var profileStream = new MemoryStream(
-                        Encoding.UTF8.GetBytes(profileString));
-                    var profile = (Profile)xmlSerializer.Deserialize(
-                        profileStream);
-                    this.AddProfile(profile);
-                }
-            }
+            this.dynamicDns = new DynamicDns();
+            this.dynamicDns.DynamicDnsUpdateEventHandler += 
+                this.OnDynamicDnsUpdate;
+            this.LoadProfiles().Wait();
+
+            this.labelProductName.Text = this.AssemblyProduct;
+            this.labelVersion.Text = string.Format(
+                "Version {0}", this.AssemblyVersion);
+            this.labelCopyright.Text = this.AssemblyCopyright;
+            this.labelCompanyName.Text = this.AssemblyCompany;
+            this.textBoxDescription.Text = this.AssemblyDescription;
         }
 
         /// <summary>
         /// Represents the mode that the Profiles tab is in.
         /// </summary>
-        private enum ModeEnum
+        private enum ProfilesMode
         {
             /// <summary>
             /// None mode. The Profiles tab is unused.
@@ -94,154 +91,432 @@ namespace Kourlas.NamecheapDynamicDns
             EDIT
         }
 
+        #region Assembly Attribute Accessors
+
+        /// <summary>
+        /// Gets the assembly title.
+        /// </summary>
+        public string AssemblyTitle
+        {
+            get
+            {
+                object[] attributes =
+                    Assembly.GetExecutingAssembly().GetCustomAttributes(
+                        typeof(AssemblyTitleAttribute), false);
+                if (attributes.Length > 0)
+                {
+                    AssemblyTitleAttribute titleAttribute =
+                        (AssemblyTitleAttribute)attributes[0];
+                    if (titleAttribute.Title != string.Empty)
+                    {
+                        return titleAttribute.Title;
+                    }
+                }
+
+                return System.IO.Path.GetFileNameWithoutExtension(
+                    Assembly.GetExecutingAssembly().CodeBase);
+            }
+        }
+
+        /// <summary>
+        /// Gets the assembly version.
+        /// </summary>
+        public string AssemblyVersion
+        {
+            get
+            {
+                return Assembly.GetExecutingAssembly().GetName().Version
+                    .ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the assembly description.
+        /// </summary>
+        public string AssemblyDescription
+        {
+            get
+            {
+                object[] attributes =
+                    Assembly.GetExecutingAssembly().GetCustomAttributes(
+                        typeof(AssemblyDescriptionAttribute), false);
+                if (attributes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                return ((AssemblyDescriptionAttribute)attributes[0]).Description;
+            }
+        }
+
+        /// <summary>
+        /// Gets the assembly product.
+        /// </summary>
+        public string AssemblyProduct
+        {
+            get
+            {
+                object[] attributes =
+                    Assembly.GetExecutingAssembly().GetCustomAttributes(
+                        typeof(AssemblyProductAttribute), false);
+                if (attributes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                return ((AssemblyProductAttribute)attributes[0]).Product;
+            }
+        }
+
+        /// <summary>
+        /// Gets the assembly copyright.
+        /// </summary>
+        public string AssemblyCopyright
+        {
+            get
+            {
+                object[] attributes =
+                    Assembly.GetExecutingAssembly().GetCustomAttributes(
+                        typeof(AssemblyCopyrightAttribute), false);
+                if (attributes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                return ((AssemblyCopyrightAttribute)attributes[0]).Copyright;
+            }
+        }
+
+        /// <summary>
+        /// Gets the assembly company.
+        /// </summary>
+        public string AssemblyCompany
+        {
+            get
+            {
+                object[] attributes =
+                    Assembly.GetExecutingAssembly().GetCustomAttributes(
+                        typeof(AssemblyCompanyAttribute), false);
+                if (attributes.Length == 0)
+                {
+                    return string.Empty;
+                }
+
+                return ((AssemblyCompanyAttribute)attributes[0]).Company;
+            }
+        }
+        #endregion
+        
         /// <summary>
         /// Changes the application mode to the specified mode.
         /// </summary>
         /// <param name="mode">The specified mode.</param>
-        private void ChangeMode(ModeEnum mode)
+        private void ChangeMode(ProfilesMode mode)
         {
-            this.mode = mode;
-
             switch (mode)
             {
-                case ModeEnum.NONE:
-                    profilesComboBox.SelectedIndex = -1;
-                    hostTextBox.Enabled = false;
-                    hostTextBox.Text = string.Empty;
-                    domainTextBox.Enabled = false;
-                    domainTextBox.Text = string.Empty;
-                    dynamicDnsPasswordTextBox.Enabled = false;
-                    dynamicDnsPasswordTextBox.Text = string.Empty;
-                    updateIntervalComboBox.Enabled = false;
-                    updateIntervalComboBox.SelectedIndex = -1;
-                    autoDetectCheckBox.Enabled = false;
-                    autoDetectCheckBox.Checked = false;
-                    ipAddressTextBox.Enabled = false;
-                    ipAddressTextBox.Text = string.Empty;
-
-                    deleteButton.Enabled = false;
-                    saveButton.Enabled = false;
-                    cancelButton.Enabled = false;
+                case ProfilesMode.NONE:
+                    this.ChangeToNoneMode();
                     break;
-                case ModeEnum.NEW:
-                    profilesComboBox.SelectedIndex = -1;
-                    hostTextBox.Enabled = true;
-                    hostTextBox.Text = string.Empty;
-                    domainTextBox.Enabled = true;
-                    domainTextBox.Text = string.Empty;
-                    dynamicDnsPasswordTextBox.Enabled = true;
-                    dynamicDnsPasswordTextBox.Text = string.Empty;
-                    updateIntervalComboBox.Enabled = true;
-                    updateIntervalComboBox.SelectedIndex = 
-                        updateIntervalComboBox.Items.Count - 1;
-                    autoDetectCheckBox.Enabled = true;
-                    autoDetectCheckBox.Checked = false;
-                    ipAddressTextBox.Enabled = true;
-                    ipAddressTextBox.Text = string.Empty;
-
-                    deleteButton.Enabled = true;
-                    saveButton.Enabled = true;
-                    cancelButton.Enabled = true;
+                case ProfilesMode.NEW:
+                    this.ChangeToNewMode();
                     break;
-                case ModeEnum.EDIT:
-                    hostTextBox.Enabled = true;
-                    hostTextBox.Text = 
-                        this.profiles[profilesComboBox.SelectedIndex].Host;
-                    domainTextBox.Enabled = true;
-                    domainTextBox.Text =
-                        this.profiles[profilesComboBox.SelectedIndex].Domain;
-                    dynamicDnsPasswordTextBox.Enabled = true;
-                    dynamicDnsPasswordTextBox.Text =
-                        this.profiles[profilesComboBox.SelectedIndex]
-                        .DynamicDnsPassword;
-                    updateIntervalComboBox.Enabled = true;
-                    updateIntervalComboBox.SelectedIndex =
-                        (int)this.profiles[profilesComboBox.SelectedIndex]
-                        .UpdateInterval;
-                    autoDetectCheckBox.Enabled = true;
-                    autoDetectCheckBox.Checked =
-                        this.profiles[profilesComboBox.SelectedIndex]
-                        .AutoDetectIpAddress;
-                    ipAddressTextBox.Enabled = 
-                        !this.profiles[profilesComboBox.SelectedIndex]
-                        .AutoDetectIpAddress;
-                    ipAddressTextBox.Text =
-                        this.profiles[profilesComboBox.SelectedIndex]
-                        .IpAddress;
-
-                    if (autoDetectCheckBox.Checked)
-                    {
-                        ipAddressTextBox.Text = string.Empty;
-                    }
-
-                    deleteButton.Enabled = true;
-                    saveButton.Enabled = true;
-                    cancelButton.Enabled = true;
+                case ProfilesMode.EDIT:
+                    this.ChangeToEditMode();
                     break;
             }
+        }
+
+        /// <summary>
+        /// Changes the application mode to the none mode.
+        /// </summary>
+        private void ChangeToNoneMode()
+        {
+            profilesComboBox.SelectedIndex = -1;
+            hostTextBox.Enabled = false;
+            hostTextBox.Text = string.Empty;
+            domainTextBox.Enabled = false;
+            domainTextBox.Text = string.Empty;
+            dynamicDnsPasswordTextBox.Enabled = false;
+            dynamicDnsPasswordTextBox.Text = string.Empty;
+            updateIntervalComboBox.Enabled = false;
+            updateIntervalComboBox.SelectedIndex = -1;
+            autoDetectCheckBox.Enabled = false;
+            autoDetectCheckBox.Checked = false;
+            ipAddressTextBox.Enabled = false;
+            ipAddressTextBox.Text = string.Empty;
+
+            deleteButton.Enabled = false;
+            saveButton.Enabled = false;
+            cancelButton.Enabled = false;
+
+            this.mode = ProfilesMode.NONE;
+        }
+
+        /// <summary>
+        /// Changes the application mode to the new mode.
+        /// </summary>
+        private void ChangeToNewMode()
+        {
+            profilesComboBox.SelectedIndex = -1;
+            hostTextBox.Enabled = true;
+            hostTextBox.Text = string.Empty;
+            domainTextBox.Enabled = true;
+            domainTextBox.Text = string.Empty;
+            dynamicDnsPasswordTextBox.Enabled = true;
+            dynamicDnsPasswordTextBox.Text = string.Empty;
+            updateIntervalComboBox.Enabled = true;
+            updateIntervalComboBox.SelectedIndex =
+                updateIntervalComboBox.Items.Count - 1;
+            autoDetectCheckBox.Enabled = true;
+            autoDetectCheckBox.Checked = false;
+            ipAddressTextBox.Enabled = true;
+            ipAddressTextBox.Text = string.Empty;
+
+            deleteButton.Enabled = true;
+            saveButton.Enabled = true;
+            cancelButton.Enabled = true;
+
+            this.mode = ProfilesMode.NEW;
+        }
+
+        /// <summary>
+        /// Changes the application mode to the edit mode.
+        /// </summary>
+        private void ChangeToEditMode()
+        {
+            var id = ((ComboBoxItem)profilesComboBox
+                .Items[profilesComboBox.SelectedIndex]).Id;
+            var profile = this.dynamicDns.GetProfile(id);
+            if (profile == null)
+            {
+                return;
+            }
+
+            hostTextBox.Enabled = true;
+            hostTextBox.Text = profile.Host;
+            domainTextBox.Enabled = true;
+            domainTextBox.Text = profile.Domain;
+            dynamicDnsPasswordTextBox.Enabled = true;
+            dynamicDnsPasswordTextBox.Text = profile.DynamicDnsPassword;
+            updateIntervalComboBox.Enabled = true;
+            updateIntervalComboBox.SelectedIndex = (int)profile.Interval;
+            autoDetectCheckBox.Enabled = true;
+            autoDetectCheckBox.Checked = profile.AutoDetectIPAddress;
+            ipAddressTextBox.Enabled = !profile.AutoDetectIPAddress;
+            ipAddressTextBox.Text = profile.UpdateIPAddress?.ToString() ?? 
+                string.Empty;
+
+            if (autoDetectCheckBox.Checked)
+            {
+                ipAddressTextBox.Text = string.Empty;
+            }
+
+            deleteButton.Enabled = true;
+            saveButton.Enabled = true;
+            cancelButton.Enabled = true;
+
+            this.mode = ProfilesMode.EDIT;
         }
 
         /// <summary>
         /// Adds the specified profile to the profiles list.
         /// </summary>
         /// <param name="profile">The specified profile.</param>
-        private void AddProfile(Profile profile)
+        /// <returns>A task which completes when the process is 
+        /// complete.</returns>
+        private async Task AddProfile(DynamicDnsProfile profile)
         {
-            var profileStatusItem = new ListViewItem(profile.Label);
-            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
-                profileStatusItem, string.Empty));
-            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
-                profileStatusItem, string.Empty));
+            var statusItem = new ListViewItem(profile.Label)
+            {
+                Tag = profile.Id
+            };
+            statusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
+                statusItem, string.Empty));
+            statusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
+                statusItem, string.Empty));
+            this.statusListView.Items.Add(statusItem);
 
-            this.profiles.Add(profile);
-            this.profilesComboBox.Items.Add(profile.Label);
-            this.statusListView.Items.Add(profileStatusItem);
+            var profileItem = new ComboBoxItem(profile.Label, profile.Id);
+            this.profilesComboBox.Items.Add(profileItem);
 
-            this.PerformDynamicDnsUpdate(profile);
+            await this.dynamicDns.AddProfile(profile);
         }
 
         /// <summary>
-        /// Edits the specified profile at the specified index in the profiles
-        /// list.
+        /// Replaces the old profile with the specified ID with the specified
+        /// new profile.
         /// </summary>
-        /// <param name="profile">The specified profile.</param>
-        /// <param name="index">The specified index.</param>
-        private void EditProfile(Profile profile, int index)
+        /// <param name="oldProfileId">The ID of the old profile.</param>
+        /// <param name="newProfile">The new profile.</param>
+        /// <returns>A task which completes when the process is 
+        /// complete.</returns>
+        private async Task ReplaceProfile(
+            Guid oldProfileId, 
+            DynamicDnsProfile newProfile)
         {
-            var profileStatusItem = new ListViewItem(profile.Label);
-            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
-                profileStatusItem, string.Empty));
-            profileStatusItem.SubItems.Add(new ListViewItem.ListViewSubItem(
-                profileStatusItem, string.Empty));
+            this.DeleteProfile(oldProfileId);
+            await this.AddProfile(newProfile);
+        }
+        
+        /// <summary>
+        /// Deletes the specified profile.
+        /// </summary>
+        /// <param name="profileId">The ID of the profile to delete.</param>
+        private void DeleteProfile(Guid profileId)
+        {
+            var statusItems = statusListView.Items.Cast<ListViewItem>();
+            var statusItemQuery = from item in statusItems
+                                  where (Guid)item.Tag == profileId
+                                  select item;
+            var statusItemsList = statusItemQuery.ToList();
+            foreach (var item in statusItemsList)
+            {
+                statusListView.Items.Remove(item);
+            }
+        
+            var profileItems = profilesComboBox.Items.Cast<ComboBoxItem>();
+            var profileItemQuery = from item in profileItems
+                                   where (Guid)item.Id == profileId
+                                   select item;
+            var profileItemsList = profileItemQuery.ToList();
+            foreach (var item in profileItemsList)
+            {
+                profilesComboBox.Items.Remove(item);
+            }
 
-            this.profiles[index] = profile;
-            this.profilesComboBox.Items[index] = profile.Label;
-            this.statusListView.Items[index] = profileStatusItem;
-
-            this.PerformDynamicDnsUpdate(profile);
+            this.dynamicDns.DeleteProfile(profileId);
         }
 
         /// <summary>
-        /// Performs a dynamic DNS update with the specified profile.
+        /// Loads the dynamic DNS profiles from the application settings.
+        /// If deserialization fails, does nothing.
         /// </summary>
-        /// <param name="profile">The specified profile.</param>
-        private void PerformDynamicDnsUpdate(Profile profile)
+        /// <returns>A task which completes when the process is 
+        /// complete.</returns>
+        private async Task LoadProfiles()
         {
-            var message = DynamicDns.PerformDynamicDnsUpdate(profile);
-            profile.LastSyncTime = DateTime.Now;
+            try
+            {
+                if (Settings.Default.SettingsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.SettingsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
 
-            var date = profile.LastSyncTime.ToShortDateString() + " " + 
-                profile.LastSyncTime.ToShortTimeString();
+                if (Settings.Default.Profiles != null)
+                {
+                    var xmlSerializer = new XmlSerializer(
+                        typeof(DynamicDnsProfile));
+                    foreach (string profileString in Settings.Default.Profiles)
+                    {
+                        var profileStream = new MemoryStream(
+                            Encoding.UTF8.GetBytes(profileString));
+                        var profileStreamReader = new StreamReader(
+                            profileStream, Encoding.UTF8);
+                        var profile = (DynamicDnsProfile)
+                            xmlSerializer.Deserialize(profileStreamReader);
+                        await this.AddProfile(profile);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "Failed to load profiles.",
+                    "namecheap-dynamic-dns");
+            }
+        }
 
-            var profileStatusItem = statusListView.Items[this.profiles.IndexOf(
-                profile)];
-            profileStatusItem.SubItems[1].Text = message;
-            profileStatusItem.SubItems[2].Text = date;
+        /// <summary>
+        /// Saves the dynamic DNS profiles to the application settings.
+        /// If serialization fails, does nothing.
+        /// </summary>
+        private void SaveProfiles()
+        {
+            try
+            {
+                // Serialize each profile to an XML string (encoded using
+                // UTF-8) and add them to a string collection
+                var collection = new StringCollection();
+                var xmlSerializer = new XmlSerializer(
+                    typeof(DynamicDnsProfile));
+                foreach (DynamicDnsProfile profile 
+                         in this.dynamicDns.Profiles.Values)
+                {
+                    using (var profileStream = new MemoryStream())
+                    {
+                        var profileStreamWriter = new StreamWriter(
+                            profileStream,
+                            Encoding.UTF8);
+                        xmlSerializer.Serialize(profileStreamWriter, profile);
+                        var profileString = Encoding.UTF8.GetString(
+                            profileStream.ToArray());
+                        collection.Add(profileString);
+                    }
+                }
 
-            lastActionValueStatusLabel.Text = date;
+                // Replace existing string collection with new string 
+                // collection and save to settings
+                Settings.Default.Profiles = collection;
+                Settings.Default.Save();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show(
+                    "Failed to save profiles.",
+                    "namecheap-dynamic-dns");
+            }
+        }
 
-            timer.Stop();
-            timer.Start();
+        /// <summary>
+        /// Called when a dynamic DNS update occurs.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event arguments.</param>
+        private void OnDynamicDnsUpdate(
+            object sender, DynamicDnsUpdateEventArgs e)
+        {
+            var date = e.UpdateDateTime.ToShortDateString() + " " +
+                e.UpdateDateTime.ToShortTimeString();
+            var message = e.Success ?
+                $"Update successful ({e.Ip})" :
+                $"Update failed ({e.UpdateException.Message})";
+
+            var items = statusListView.Items.Cast<ListViewItem>();
+            var statusItemQuery = from item in items
+                                  where (Guid)item.Tag == e.UpdateProfile.Id
+                                  select item;
+            var statusItems = statusItemQuery.ToList();
+            if (statusItems.Count == 1)
+            {
+                var statusItem = statusItems[0];
+
+                statusItem.SubItems[1].Text = message;
+                statusItem.SubItems[2].Text = date;
+
+                lastActionValueStatusLabel.Text = 
+                    $"{e.UpdateProfile.Label} ({date})";
+            }
+        }
+        
+        /// <summary>
+        /// Called when the Update button is clicked.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event arguments.</param>
+        private async void OnUpdateButtonClick(object sender, EventArgs e)
+        {
+            foreach (int index in statusListView.SelectedIndices)
+            {
+                var item = this.statusListView.Items[index];
+                var profile = this.dynamicDns.GetProfile((Guid)item.Tag);
+                if (profile != null)
+                {
+                    await this.dynamicDns.PerformUpdate(profile);
+                }
+            }
         }
 
         /// <summary>
@@ -249,36 +524,9 @@ namespace Kourlas.NamecheapDynamicDns
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void UpdateAllButton_Click(object sender, EventArgs e)
+        private async void OnUpdateAllButtonClick(object sender, EventArgs e)
         {
-            foreach (var profile in this.profiles)
-            {
-                this.PerformDynamicDnsUpdate(profile);
-            }
-        }
-
-        /// <summary>
-        /// Called when the Stop/Start button is clicked.
-        /// </summary>
-        /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event arguments.</param>
-        private void StopStartButton_Click(object sender, EventArgs e)
-        {
-            if ((string)stopStartButton.Tag == "Stop All")
-            {
-                timer.Stop();
-                stopStartButton.Tag = "Start";
-            }
-            else if ((string)stopStartButton.Tag == "Start")
-            {
-                timer.Start();
-                stopStartButton.Text = "Stop";
-                stopStartButton.Tag = "Stop";
-            }
-            else
-            {
-                throw new Exception();
-            }
+            await this.dynamicDns.PerformUpdateAll();
         }
 
         /// <summary>
@@ -286,9 +534,9 @@ namespace Kourlas.NamecheapDynamicDns
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void NewButton_Click(object sender, EventArgs e)
+        private void OnNewButtonClick(object sender, EventArgs e)
         {
-            this.ChangeMode(ModeEnum.NEW);
+            this.ChangeMode(ProfilesMode.NEW);
         }
 
         /// <summary>
@@ -296,10 +544,16 @@ namespace Kourlas.NamecheapDynamicDns
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void DeleteButton_Click(object sender, EventArgs e)
+        private void OnDeleteButtonClick(object sender, EventArgs e)
         {
-            this.profiles.RemoveAt(profilesComboBox.SelectedIndex);
-            this.ChangeMode(ModeEnum.NONE);
+            if (this.mode != ProfilesMode.NEW)
+            {
+                var id = ((ComboBoxItem)profilesComboBox
+                    .Items[profilesComboBox.SelectedIndex]).Id;
+                this.DeleteProfile(id);
+            }
+            
+            this.ChangeMode(ProfilesMode.NONE);
         }
 
         /// <summary>
@@ -307,52 +561,45 @@ namespace Kourlas.NamecheapDynamicDns
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void SaveButton_Click(object sender, EventArgs e)
+        private async void OnSaveButtonClick(object sender, EventArgs e)
         {
-            Profile profile;
-            if (this.mode == ModeEnum.NEW)
-            {
-                profile = new Profile();
-            }
-            else if (this.mode == ModeEnum.EDIT)
-            {
-                profile = this.profiles[profilesComboBox.SelectedIndex];
-            }
-            else
-            {
-                return;
-            }
+            var mode = this.mode;
+            var index = profilesComboBox.SelectedIndex;
 
-            profile.Host = hostTextBox.Text;
-            profile.Domain = domainTextBox.Text;
-            profile.DynamicDnsPassword = dynamicDnsPasswordTextBox.Text;
-            profile.UpdateInterval = 
-                (UpdateIntervalEnum)updateIntervalComboBox.SelectedIndex;
-            profile.IpAddress = ipAddressTextBox.Text;
-            profile.AutoDetectIpAddress = autoDetectCheckBox.Checked;
+            var profile = new DynamicDnsProfile()
+            {
+                Host = hostTextBox.Text,
+                Domain = domainTextBox.Text,
+                DynamicDnsPassword = dynamicDnsPasswordTextBox.Text,
+                Interval =
+                (UpdateInterval)updateIntervalComboBox.SelectedIndex
+            };
+            IPAddress.TryParse(ipAddressTextBox.Text, out IPAddress ipAddress);
+            profile.UpdateIPAddress = ipAddress?.ToString() ?? string.Empty;
+            profile.AutoDetectIPAddress = autoDetectCheckBox.Checked;
 
             if (profile.Host == string.Empty || profile.Domain == string.Empty
                 || profile.DynamicDnsPassword == string.Empty
                 || updateIntervalComboBox.SelectedIndex == -1
-                || (profile.IpAddress == string.Empty && 
-                !profile.AutoDetectIpAddress))
+                || (profile.UpdateIPAddress == string.Empty 
+                    && !profile.AutoDetectIPAddress))
             {
                 MessageBox.Show(
-                    "Data validation failed.",
+                    "Profile information validation failed.",
                     "namecheap-dynamic-dns");
                 return;
             }
 
-            if (this.mode == ModeEnum.NEW)
+            this.ChangeMode(ProfilesMode.NONE);
+            if (mode == ProfilesMode.NEW)
             {
-                this.AddProfile(profile);
+                await this.AddProfile(profile);
             }
-            else if (this.mode == ModeEnum.EDIT)
+            else if (mode == ProfilesMode.EDIT)
             {
-                this.EditProfile(profile, profilesComboBox.SelectedIndex);
+                var id = ((ComboBoxItem)profilesComboBox.Items[index]).Id;
+                await this.ReplaceProfile(id, profile);
             }
-
-            this.ChangeMode(ModeEnum.NONE);
         }
 
         /// <summary>
@@ -362,27 +609,18 @@ namespace Kourlas.NamecheapDynamicDns
         /// <param name="e">The event arguments.</param>
         private void CancelButton_Click(object sender, EventArgs e)
         {
-            this.ChangeMode(ModeEnum.NONE);
+            this.ChangeMode(ProfilesMode.NONE);
         }
 
         /// <summary>
-        /// Called when the Exit button is clicked.
+        /// Called when the status list view selected index changes.
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        private void StatusListViewSelectedIndexChanged(
+            object sender, EventArgs e)
         {
-            Application.Exit();
-        }
-
-        /// <summary>
-        /// Called when the About button is clicked.
-        /// </summary>
-        /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event arguments.</param>
-        private void AboutToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            new AboutBox().ShowDialog();
+            updateButton.Enabled = statusListView.SelectedIndices.Count != 0;
         }
 
         /// <summary>
@@ -396,7 +634,7 @@ namespace Kourlas.NamecheapDynamicDns
         {
             if (profilesComboBox.SelectedIndex != -1)
             {
-                this.ChangeMode(ModeEnum.EDIT);
+                this.ChangeMode(ProfilesMode.EDIT);
             }
         }
 
@@ -431,24 +669,6 @@ namespace Kourlas.NamecheapDynamicDns
         }
 
         /// <summary>
-        /// Called when the timer ticks.
-        /// </summary>
-        /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event arguments.</param>
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            foreach (var profile in this.profiles)
-            {
-                if (profile.LastSyncTime +
-                    Profile.GetTimeSpanForUpdateInterval(
-                        profile.UpdateInterval) <= DateTime.Now)
-                {
-                    this.PerformDynamicDnsUpdate(profile);
-                }
-            }
-        }
-
-        /// <summary>
         /// Called when the main form is resized.
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
@@ -470,19 +690,52 @@ namespace Kourlas.NamecheapDynamicDns
             object sender, 
             FormClosingEventArgs e)
         {
-            var collection = new StringCollection();
-            var xmlSerializer = new XmlSerializer(typeof(Profile));
-            foreach (Profile profile in this.profiles)
+            this.SaveProfiles();
+        }
+
+        /// <summary>
+        /// Links dynamic DNS profiles with entries in a combo box.
+        /// </summary>
+        private class ComboBoxItem
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ComboBoxItem"/>
+            /// class.
+            /// </summary>
+            /// <param name="text">The text associated with the item.</param>
+            /// <param name="id">The ID associated with the item.</param>
+            public ComboBoxItem(string text, Guid id)
             {
-                var profileStream = new MemoryStream();
-                xmlSerializer.Serialize(profileStream, profile);
-                var profileString = Encoding.UTF8.GetString(
-                    profileStream.ToArray());
-                collection.Add(profileString);
+                this.Text = text;
+                this.Id = id;
             }
 
-            Settings.Default.Profiles = collection;
-            Settings.Default.Save();
+            /// <summary>
+            /// Gets or sets the text associated with the item.
+            /// </summary>
+            public string Text
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Gets or sets ID associated with the item.
+            /// </summary>
+            public Guid Id
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Returns the text associated with the item.
+            /// </summary>
+            /// <returns>The text associated with the item.</returns>
+            public override string ToString()
+            {
+                return this.Text;
+            }
         }
     }
 }

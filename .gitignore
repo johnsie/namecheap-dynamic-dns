@@ -1,7 +1,9 @@
 # Visual Studio
-
 .vs/
 bin/
 obj/
 *.user
 *.Cache
+
+# Signing
+signing

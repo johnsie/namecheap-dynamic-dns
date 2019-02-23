@@ -1,2 +1,2 @@
-namecheap-dynamic-dns    
-Copyright (C) 2017 Michael Kourlas
+namecheap-dynamic-dns
+Copyright (C) 2017-2019 Michael Kourlas
