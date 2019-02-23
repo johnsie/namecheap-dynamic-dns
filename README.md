@@ -2,7 +2,7 @@
 
 ## Overview ##
 
-namecheap-dynamic-dns is an open source clone of (Namecheap's own dynamic DNS client)[https://www.namecheap.com/support/knowledgebase/article.aspx/111/11/using-namecheap-dynamic-dns-client--version-20x-beta].
+namecheap-dynamic-dns is an open source clone of [Namecheap's own dynamic DNS client](https://www.namecheap.com/support/knowledgebase/article.aspx/111/11/using-namecheap-dynamic-dns-client--version-20x-beta).
 
 I created it primarily because Namecheap's client would not minimize to the
 system tray.
