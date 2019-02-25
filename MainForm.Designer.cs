@@ -69,7 +69,7 @@
             this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.updateAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl.SuspendLayout();
             this.statusTabPage.SuspendLayout();
             this.profilesTabPage.SuspendLayout();
@@ -103,7 +103,7 @@
             this.statusTabPage.Margin = new System.Windows.Forms.Padding(4);
             this.statusTabPage.Name = "statusTabPage";
             this.statusTabPage.Padding = new System.Windows.Forms.Padding(4);
-            this.statusTabPage.Size = new System.Drawing.Size(648, 282);
+            this.statusTabPage.Size = new System.Drawing.Size(648, 307);
             this.statusTabPage.TabIndex = 0;
             this.statusTabPage.Text = "Status";
             this.statusTabPage.UseVisualStyleBackColor = true;
@@ -156,17 +156,17 @@
             // profileHeader
             // 
             this.profileHeader.Text = "Profile";
-            this.profileHeader.Width = 136;
+            this.profileHeader.Width = 225;
             // 
             // statusHeader
             // 
             this.statusHeader.Text = "Status";
-            this.statusHeader.Width = 205;
+            this.statusHeader.Width = 225;
             // 
             // dateHeader
             // 
             this.dateHeader.Text = "Date";
-            this.dateHeader.Width = 119;
+            this.dateHeader.Width = 177;
             // 
             // profilesTabPage
             // 
@@ -536,7 +536,7 @@
             this.contextMenuStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.updateAllToolStripMenuItem,
-            this.exitToolStripMenuItem1});
+            this.exitToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
             this.contextMenuStrip.Size = new System.Drawing.Size(150, 52);
             // 
@@ -547,10 +547,12 @@
             this.updateAllToolStripMenuItem.Text = "Update All";
             this.updateAllToolStripMenuItem.Click += new System.EventHandler(this.OnUpdateAllButtonClick);
             // 
-            // exitToolStripMenuItem1
+            // exitToolStripMenuItem
             // 
-            this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-            this.exitToolStripMenuItem1.Size = new System.Drawing.Size(149, 24);
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(149, 24);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.ExitToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -613,7 +615,7 @@
         private System.Windows.Forms.Button updateAllButton;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem updateAllToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.Button updateButton;
         private System.Windows.Forms.TabPage aboutTabPage;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel;

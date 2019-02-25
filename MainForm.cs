@@ -694,6 +694,16 @@ namespace Kourlas.NamecheapDynamicDns
         }
 
         /// <summary>
+        /// Called when the Exit button is clicked.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event arguments.</param>
+        private void ExitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        /// <summary>
         /// Links dynamic DNS profiles with entries in a combo box.
         /// </summary>
         private class ComboBoxItem
