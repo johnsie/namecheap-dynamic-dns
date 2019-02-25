@@ -7,6 +7,8 @@ namecheap-dynamic-dns is an open source clone of [Namecheap's own dynamic DNS cl
 I created it primarily because Namecheap's client would not minimize to the
 system tray.
 
+The application requires the [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework-runtime/net472).
+
 ## License ##
 
 namecheap-dynamic-dns is licensed under the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).

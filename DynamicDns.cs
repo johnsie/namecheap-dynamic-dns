@@ -184,11 +184,9 @@ namespace Kourlas.NamecheapDynamicDns
             try
             {
                 // Use current machine's IPv4 address if requested
-                var ip = IPAddress.Parse(profile.UpdateIPAddress);
-                if (profile.AutoDetectIPAddress)
-                {
-                    ip = await GetIp();
-                }
+                var ip = profile.AutoDetectIPAddress 
+                         ? await GetIp() 
+                         : IPAddress.Parse(profile.UpdateIPAddress);
 
                 // Get response and parse as XML
                 HttpWebRequest request = WebRequest.CreateHttp(

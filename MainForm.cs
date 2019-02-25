@@ -59,7 +59,7 @@ namespace Kourlas.NamecheapDynamicDns
             this.dynamicDns = new DynamicDns();
             this.dynamicDns.DynamicDnsUpdateEventHandler += 
                 this.OnDynamicDnsUpdate;
-            this.LoadProfiles().Wait();
+            this.LoadProfiles();
 
             this.labelProductName.Text = this.AssemblyProduct;
             this.labelVersion.Text = string.Format(
@@ -394,7 +394,7 @@ namespace Kourlas.NamecheapDynamicDns
         /// </summary>
         /// <returns>A task which completes when the process is 
         /// complete.</returns>
-        private async Task LoadProfiles()
+        private async void LoadProfiles()
         {
             try
             {
