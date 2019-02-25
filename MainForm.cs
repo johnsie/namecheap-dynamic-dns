@@ -421,10 +421,10 @@ namespace Kourlas.NamecheapDynamicDns
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Failed to load profiles.",
+                    $"Failed to load profiles: {ex.Message}.",
                     "namecheap-dynamic-dns");
             }
         }
@@ -462,10 +462,10 @@ namespace Kourlas.NamecheapDynamicDns
                 Settings.Default.Profiles = collection;
                 Settings.Default.Save();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 MessageBox.Show(
-                    "Failed to save profiles.",
+                    $"Failed to save profiles: {ex.Message}.",
                     "namecheap-dynamic-dns");
             }
         }
